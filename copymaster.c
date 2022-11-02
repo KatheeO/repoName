@@ -142,12 +142,12 @@ void fast_copy(struct CopymasterOptions cpm_options){
     if (outfile_fd == -1) FatalError(102, "INA CHYBA\n", 21);
 
     char buf[FAST] = {0};
-    int count = 0;
+//    int count = 0;
 
     //read and write from and to the files
     while (read(infile_fd, &buf, FAST) > 0){
         write(outfile_fd, &buf, strlen(buf));
-        printf("Write cycle %d\n", count++);
+     //   printf("Write cycle %d\n", count++);
     }
 
 
@@ -164,12 +164,12 @@ void slow_copy(struct CopymasterOptions cpm_options){
     int outfile_fd = open(cpm_options.outfile, O_WRONLY|O_CREAT);
 
     char buf[2] = {0};
-    int count = 0;
+//    int count = 0;
 
     //read and write from and to the files
     while (read(infile_fd, &buf, 1) > 0){
         write(outfile_fd, &buf, strlen(buf));
-        printf("Write cycle %d\n", count++);
+      //  printf("Write cycle %d\n", count++);
     }
  
 
@@ -212,13 +212,14 @@ void copy(struct CopymasterOptions cpm_options){
         //INVALID PERMISSIONS FOR NEW FILE
         if (cpm_options.create_mode == 0) FatalError(99, "ZLE PRAVA\n", 23);
 
-        //TODO UMASK (I don't quite understand)
+        //TODO UMASK
         if (cpm_options.umask){
+            //mode_t mask;
             mode_t mask = umask(0);
             mask = cpm_options.create_mode;
 
-            umask(0046);
-            
+            umask(0026);
+
             for (int i = 0; i < 4; i++){
                 //if (cpm_options.umask_options[i][0] && cpm_options.umask_options[i][])
                 switch (cpm_options.umask_options[i][0]){
@@ -330,7 +331,7 @@ void copy(struct CopymasterOptions cpm_options){
             //get the permissions of input file
             struct stat statbuf;
             fstat(infile_fd, &statbuf);
-                       
+
             outfile_fd = open(cpm_options.outfile, O_CREAT|O_WRONLY);
             //set the permissions of the newly created file
             fchmod(outfile_fd, statbuf.st_mode);
@@ -349,14 +350,15 @@ void copy(struct CopymasterOptions cpm_options){
         switch (cpm_options.lseek_options.x){
             case 0: lseek(outfile_fd, cpm_options.lseek_options.pos2, SEEK_SET);
                     break;
-            case 1: lseek(outfile_fd, cpm_options.lseek_options.pos2, SEEK_END);
+            case 2: lseek(outfile_fd, cpm_options.lseek_options.pos2, SEEK_END);
                     break;
-            case 2: lseek(outfile_fd, cpm_options.lseek_options.pos2, SEEK_CUR);
+            case 1: lseek(outfile_fd, cpm_options.lseek_options.pos2, SEEK_CUR);
                     break;
             default: FatalError(108, "INA CHYBA\n", 33);
                      break;
                      
          }
+        lseek(infile_fd, cpm_options.lseek_options.pos1, SEEK_SET);
 
         bytes_to_read = cpm_options.lseek_options.num;
 
@@ -418,7 +420,7 @@ void copy(struct CopymasterOptions cpm_options){
                 bytes_to_read-=100;
             }
         }
-    
+
         else {
             //read and write 100 characters from the infile to outfile until there are no more chars to copy
             while (read(infile_fd, &buf, NORMAL) > 0){
